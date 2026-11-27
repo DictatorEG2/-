@@ -298,14 +298,60 @@ class CommandEngine(private val context: Context) {
         if (context.checkSelfPermission(android.Manifest.permission.READ_CONTACTS) !=
             android.content.pm.PackageManager.PERMISSION_GRANTED
         ) return null
-        val uri = android.provider.ContactsContract.CommonDataKinds.Phone.CONTENT_FILTER_URI
-            .buildUpon().appendPath(name).build()
-        val projection = arrayOf(android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER)
+        val phone = android.provider.ContactsContract.CommonDataKinds.Phone
+        val projection = arrayOf(phone.DISPLAY_NAME, phone.NUMBER)
         return runCatching {
-            context.contentResolver.query(uri, projection, null, null, null)?.use { cursor ->
-                if (cursor.moveToFirst()) cursor.getString(0) else null
+            context.contentResolver.query(phone.CONTENT_URI, projection, null, null, null)?.use { cursor ->
+                val nameIndex = cursor.getColumnIndexOrThrow(phone.DISPLAY_NAME)
+                val numberIndex = cursor.getColumnIndexOrThrow(phone.NUMBER)
+                val query = normalizeContact(name)
+                var bestNumber: String? = null
+                var bestScore = 0.0
+                while (cursor.moveToNext()) {
+                    val savedName = cursor.getString(nameIndex).orEmpty()
+                    val number = cursor.getString(numberIndex).orEmpty()
+                    if (number.isBlank()) continue
+                    val saved = normalizeContact(savedName)
+                    val score = when {
+                        saved == query -> 1.0
+                        saved.startsWith(query) || query.startsWith(saved) -> 0.90
+                        else -> contactSimilarity(transliterateContact(query), transliterateContact(saved))
+                    }
+                    if (score > bestScore) {
+                        bestScore = score
+                        bestNumber = number
+                    }
+                }
+                bestNumber?.takeIf { bestScore >= 0.72 }
             }
         }.getOrNull()
+    }
+
+    private fun normalizeContact(value: String): String =
+        com.sawt.voice.parser.ArabicNormalizer.normalize(value).replace(" ", "")
+
+    private fun transliterateContact(value: String): String {
+        val map = mapOf('ا' to "a", 'أ' to "a", 'إ' to "a", 'آ' to "a", 'ب' to "b", 'ت' to "t",
+            'ج' to "g", 'ح' to "h", 'خ' to "kh", 'د' to "d", 'ر' to "r", 'ز' to "z", 'س' to "s",
+            'ش' to "sh", 'ع' to "a", 'غ' to "gh", 'ف' to "f", 'ق' to "q", 'ك' to "k", 'ل' to "l",
+            'م' to "m", 'ن' to "n", 'ه' to "h", 'و' to "w", 'ي' to "y", 'ى' to "a")
+        return value.map { map[it] ?: it.toString() }.joinToString("")
+    }
+
+    private fun contactSimilarity(a: String, b: String): Double {
+        if (a.isBlank() || b.isBlank()) return 0.0
+        var prior = IntArray(b.length + 1) { it }
+        for (i in a.indices) {
+            val current = IntArray(b.length + 1)
+            current[0] = i + 1
+            for (j in b.indices) {
+                val cost = if (a[i] == b[j]) 0 else 1
+                current[j + 1] = minOf(current[j] + 1, prior[j + 1] + 1, prior[j] + cost)
+            }
+            prior = current
+        }
+        return 1.0 - prior[b.length].toDouble() / maxOf(a.length, b.length)
+    }
     }
 
     private fun ok(success: Boolean, good: String, bad: String) = ExecResult(success, if (success) good else bad)
