@@ -138,7 +138,7 @@ class CommandEngine(private val context: Context) {
         return result
     }
 
-    private fun execute(c: Command): ExecResult = when (c) {
+    private suspend fun execute(c: Command): ExecResult = when (c) {
         Command.Back -> global(AccessibilityService.GLOBAL_ACTION_BACK, "تم الرجوع")
         Command.Home -> global(AccessibilityService.GLOBAL_ACTION_HOME, "الشاشة الرئيسية")
         Command.Recents -> global(AccessibilityService.GLOBAL_ACTION_RECENTS, "التطبيقات الأخيرة")
@@ -201,10 +201,17 @@ class CommandEngine(private val context: Context) {
             ok(launch(Intent(Intent.ACTION_VIEW, uri)), "فتحت نتائج البحث في المتصفح", "تعذر فتح المتصفح")
         }
         is Command.TelegramSearch -> {
-            val uri = Uri.parse("tg://search?query=" + Uri.encode(c.query))
-            val searchIntent = Intent(Intent.ACTION_VIEW, uri).setPackage("org.telegram.messenger")
+            // Telegram documents tg://chats/search as the global search entry point.
+            val searchIntent = Intent(Intent.ACTION_VIEW, Uri.parse("tg://chats/search"))
+                .setPackage("org.telegram.messenger")
             if (launch(searchIntent)) {
-                ExecResult(true, "فتحت بحث تليجرام")
+                delay(500L)
+                val typed = SawtAccessibilityService.instance?.typeText(c.query) == true
+                ExecResult(
+                    true,
+                    if (typed) "فتحت بحث تليجرام وكتبت عبارة البحث"
+                    else "فتحت بحث تليجرام. أكمل كتابة عبارة البحث في خانة البحث",
+                )
             } else {
                 val appIntent = AppGraph.resolver.resolve("تليجرام")
                 ok(appIntent != null && launch(appIntent), "فتحت تليجرام. استخدم علامة البحث للوصول إلى النتائج", "لم أجد تطبيق تليجرام")
