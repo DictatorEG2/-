@@ -54,7 +54,7 @@ class ArabicCommandParser {
 
     private fun parsePhoto(t: List<W>): Command? {
         val words = t.map { it.norm }.toSet()
-        val capture = setOf("صور", "صورلي", "التقط", "التقاط", "خد", "خدلي", "التقطلي", "capture", "photo", "picture", "shutter")
+        val capture = setOf("صور", "صورلي", "صورلي", "التقط", "التقاط", "خد", "خدلي", "التقطلي", "التقطلي", "صوري", "لقط", "لقطلي", "snap", "capture", "photo", "picture", "shutter")
         val cameraContext = words.any { it in setOf("كاميرا", "الكاميرا", "صوره", "تصوير") }
         if (words.any { it in setOf("شاشه", "الشاشه", "سكرين", "سكرينشوت") }) return null
         return if (words.any { it in capture } && (cameraContext || words.size <= 2)) Command.TakePhoto else null
@@ -115,8 +115,8 @@ class ArabicCommandParser {
 
     private fun parseLike(t: List<W>): Command? {
         val n = t.map { it.norm }.toSet()
-        if (n.any { it in setOf("لايك", "اللايك", "لايكه", "اعجاب", "اعجبني") } &&
-            n.any { it in setOf("لايك", "اللايك", "لايكه", "اعجاب", "اعجبني", "اعمل", "حط", "دوس", "اضغط") }
+        if (n.any { it in setOf("لايك", "اللايك", "لايكه", "اعجاب", "اعجبني", "جامد", "عجبني") } &&
+            n.any { it in setOf("لايك", "اللايك", "لايكه", "اعجاب", "اعجبني", "اعمل", "حط", "دوس", "اضغط", "اعمللي", "حطلي", "دوسلي") }
         ) return Command.ClickText("like")
         return null
     }
@@ -215,18 +215,18 @@ class ArabicCommandParser {
 
         // كلها بصيغتها بعد التطبيع.
         private val FILLERS = setOf(
-            "لو", "سمحت", "فضلك", "ممكن", "عايز", "عاوز", "اريد", "الان", "بقي",
+            "لو", "سمحت", "فضلك", "ممكن", "عايز", "عاوز", "عاوزه", "عايزه", "اريد", "من فضلك", "الان", "دلوقتي", "حالا", "بقي",
             "خلاص", "يعني", "ياريت", "معلش", "طيب", "لي",
         )
-        private val OPEN_VERBS = setOf("افتح", "افتحلي", "افتح لي", "شغل", "شغلي", "شغللي", "ادخل", "هات", "هاتلي", "روح", "وريني")
+        private val OPEN_VERBS = setOf("افتح", "افتحلي", "افتح لي", "شغل", "شغلي", "شغللي", "شغل لي", "ادخل", "ادخل على", "هات", "هاتلي", "روح", "روحلي", "وديني", "وديني على", "وريني", "اعرض", "ابدأ")
         private val APP_NOISE = setOf("علي", "الي", "تطبيق", "برنامج", "لتطبيق", "ل")
-        private val CLICK_VERBS = setOf("اضغط", "دوس", "اختار", "انقر", "اضغطي", "دوسي", "اختر")
+        private val CLICK_VERBS = setOf("اضغط", "دوس", "اختار", "انقر", "اضغطي", "دوسي", "اختر", "المس", "اكبس", "اكبسلي", "اختاري")
         private val CLICK_NOISE = setOf("علي", "الي", "العنصر", "عنصر", "رقم", "زر", "الزر", "الخيار", "خيار")
-        private val DICTATION_VERBS = setOf("اكتب", "اكتبلي", "املي")
-        private val SEARCH_VERBS = setOf("ابحث", "ابحثلي", "دور", "دورلي")
-        private val TELEGRAM_WORDS = setOf("تليجرام", "تلجرام", "تيليجرام")
+        private val DICTATION_VERBS = setOf("اكتب", "اكتبلي", "اكتب لي", "املي", "امل", "دون", "سجل")
+        private val SEARCH_VERBS = setOf("ابحث", "ابحثلي", "ابحث لي", "دور", "دورلي", "دور لي", "فتش", "فتشلي", "اعثر", "ابحث عن")
+        private val TELEGRAM_WORDS = setOf("تليجرام", "تلجرام", "تيليجرام", "تلغرام", "تيليغرام")
         private val WEB_SEARCH_WORDS = setOf("متصفح", "المتصفح", "جوجل", "كروم", "انترنت", "الانترنت")
-        private val CALL_VERBS = setOf("اتصل", "كلم", "رن", "اطلب")
+        private val CALL_VERBS = setOf("اتصل", "اتصل بي", "كلم", "رن", "اطلب", "هات", "اعمل مكالمه", "اجري مكالمه")
 
         private val NUMBER_WORDS = mapOf(
             "واحد" to 1, "واحده" to 1, "وحده" to 1,
