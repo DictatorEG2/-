@@ -10,6 +10,9 @@ import androidx.core.content.ContextCompat
 import com.sawt.voice.accessibility.SawtAccessibilityService
 
 object Permissions {
+    fun hasCamera(c: Context): Boolean =
+        ContextCompat.checkSelfPermission(c, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+
     fun hasContacts(c: Context): Boolean =
         ContextCompat.checkSelfPermission(c, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED
 
