@@ -1,3 +1,22 @@
-# SAWT Android
+# صَوْت (SAWT) — Android
 
-Repository initialized for the SAWT Android project. The application source and development workflow are being added on the `feature/sawt-stability-updates` branch from the supplied project archive.
+مشروع مساعد صوتي عربي لنظام Android. يحافظ التطوير على وظائف التطبيق الحالية، ويطبق معيار Dictator الرسمي للجودة دون فرض وظائف موحدة على المشاريع المختلفة.
+
+## معيار التطوير
+راجع:
+- [معيار Dictator الرسمي](DEVELOPMENT_STANDARD.md)
+- [قواعد الأداء الخمس](speed-rules.md)
+- [سياسة الإصدار المستقر](STABLE_RELEASE_POLICY.md)
+- [إعداد تحديثات GitHub Releases](UPDATE_SETUP.md)
+
+## التطوير والبناء
+- Android Gradle Plugin: 8.5.2
+- Kotlin: 2.0.20
+- JDK: 17
+- compileSdk / targetSdk: 34
+- minSdk: 26
+
+شغّل اختبارات الوحدات وAndroid lint والبناء عبر GitHub Actions قبل الدمج. لا يُعلن إصدار مستقر قبل اجتياز بوابة الإصدار.
+
+## الشفافية حول الاختبارات
+لا يُعد وجود ملفات اختبارات أو إعداد CI دليلًا على نجاحها. راجع نتائج Actions الفعلية وسجل الاختبارات والأجهزة التي جرى التحقق عليها. لا تُعلن تغطية Android 13 أو التثبيت والتوقيع إلا بعد اختبارها فعليًا.
