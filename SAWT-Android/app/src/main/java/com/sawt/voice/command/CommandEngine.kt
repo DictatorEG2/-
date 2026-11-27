@@ -299,7 +299,7 @@ class CommandEngine(private val context: Context) {
             android.content.pm.PackageManager.PERMISSION_GRANTED
         ) return null
         val phoneUri = android.provider.ContactsContract.CommonDataKinds.Phone.CONTENT_URI
-        val displayNameColumn = android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME
+        val displayNameColumn = android.provider.ContactsContract.Contacts.DISPLAY_NAME
         val numberColumn = android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER
         val projection = arrayOf(displayNameColumn, numberColumn)
         return runCatching {
