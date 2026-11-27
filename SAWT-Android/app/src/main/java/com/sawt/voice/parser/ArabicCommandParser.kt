@@ -92,7 +92,7 @@ class ArabicCommandParser {
             t.drop(withIndex + 1).takeWhile { it.norm !in setOf("في", "على", "واتساب", "واتس") }
         } else {
             t.filterIndexed { i, w ->
-                i != appIndex && w.norm !in setOf("افتح", "افتحلي", "شغل", "شغلي", "رساله", "رسالة", "ابعت", "ابعث", "ارسل", "رسائل")
+                i != appIndex && w.norm !in setOf("افتح", "افتحلي", "شغل", "شغلي", "رساله", "رسالة", "ابعت", "ابعث", "ارسل", "رسائل", "في", "على")
             }
         }
         val name = nameWords.joinToString(" ") { it.orig.removePrefix("ب").removePrefix("ل") }.trim()
