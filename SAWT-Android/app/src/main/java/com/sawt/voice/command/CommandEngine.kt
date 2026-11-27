@@ -180,6 +180,10 @@ class CommandEngine(private val context: Context) {
         Command.Mute -> volume(AudioManager.ADJUST_MUTE, "تم كتم الصوت")
         Command.BrightnessUp -> brightness(+BRIGHTNESS_STEP)
         Command.BrightnessDown -> brightness(-BRIGHTNESS_STEP)
+        Command.YoutubeHome -> {
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/"))
+            ok(launch(intent), "تم فتح يوتيوب", "تعذر فتح يوتيوب")
+        }
         is Command.YoutubeSearch -> {
             val uri = Uri.parse("https://www.youtube.com/results?search_query=" + Uri.encode(c.query))
             ok(launch(Intent(Intent.ACTION_VIEW, uri)), "نتائج البحث في يوتيوب", "تعذر فتح يوتيوب")
