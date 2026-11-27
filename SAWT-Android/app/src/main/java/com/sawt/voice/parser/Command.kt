@@ -13,6 +13,8 @@ sealed interface Command {
     data object VolumeUp : Command { override val label = "رفع الصوت" }
     data object VolumeDown : Command { override val label = "خفض الصوت" }
     data object Mute : Command { override val label = "كتم الصوت" }
+    data object TorchOn : Command { override val label = "تشغيل الكشاف" }
+    data object TorchOff : Command { override val label = "إيقاف الكشاف" }
     data object BrightnessUp : Command { override val label = "زيادة الإضاءة" }
     data object BrightnessDown : Command { override val label = "تقليل الإضاءة" }
     data object ReadScreen : Command { override val label = "قراءة الشاشة" }
