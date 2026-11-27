@@ -141,7 +141,12 @@ class SawtAccessibilityService : AccessibilityService() {
 
     fun clickText(text: String): Boolean {
         val root = rootInActiveWindow ?: return false
-        val target = root.findAccessibilityNodeInfosByText(text)
+        val candidates = when (text.lowercase()) {
+            "like" -> listOf("Like", "إعجاب", "أعجبني", "اعجاب", "أحب")
+            else -> listOf(text)
+        }
+        val target = candidates.asSequence()
+            .flatMap { root.findAccessibilityNodeInfosByText(it).asSequence() }
             .firstOrNull { it.isVisibleToUser && !it.isPassword } ?: return false
         val r = Rect()
         target.getBoundsInScreen(r)
