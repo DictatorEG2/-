@@ -179,6 +179,8 @@ class CommandEngine(private val context: Context) {
         Command.VolumeUp -> volume(AudioManager.ADJUST_RAISE, "تم رفع الصوت")
         Command.VolumeDown -> volume(AudioManager.ADJUST_LOWER, "تم خفض الصوت")
         Command.Mute -> volume(AudioManager.ADJUST_MUTE, "تم كتم الصوت")
+        Command.TorchOn -> setTorch(true)
+        Command.TorchOff -> setTorch(false)
         Command.BrightnessUp -> brightness(+BRIGHTNESS_STEP)
         Command.BrightnessDown -> brightness(-BRIGHTNESS_STEP)
         Command.YoutubeHome -> {
@@ -233,6 +235,22 @@ class CommandEngine(private val context: Context) {
         Command.StopListening -> ExecResult(true, "تم إيقاف الاستماع", stopListening = true)
         Command.Unknown -> ExecResult(false, "لم أفهم الأمر")
         Command.Confirm, Command.Cancel -> ExecResult(false, "لا يوجد أمر بانتظار التأكيد", ignored = true)
+    }
+
+    private fun setTorch(enabled: Boolean): ExecResult {
+        if (context.checkSelfPermission(android.Manifest.permission.CAMERA) !=
+            android.content.pm.PackageManager.PERMISSION_GRANTED
+        ) return ExecResult(false, "اسمح لصَوْت باستخدام الكاميرا من شاشة الأذونات لتشغيل الكشاف")
+        return runCatching {
+            val manager = context.getSystemService(android.hardware.camera2.CameraManager::class.java)
+            val cameraId = manager.cameraIdList.firstOrNull { id ->
+                manager.getCameraCharacteristics(id).get(
+                    android.hardware.camera2.CameraCharacteristics.FLASH_INFO_AVAILABLE
+                ) == true
+            } ?: return ExecResult(false, "هاتفك لا يحتوي على كشاف متاح")
+            manager.setTorchMode(cameraId, enabled)
+            ExecResult(true, if (enabled) "تم تشغيل الكشاف" else "تم إيقاف الكشاف")
+        }.getOrElse { ExecResult(false, "تعذر تغيير حالة الكشاف. أغلق تطبيق الكاميرا وحاول مجددًا") }
     }
 
     private fun findContactNumber(name: String): String? {
