@@ -83,17 +83,32 @@ class ArabicCommandParser {
     }
 
     private fun parseWhatsApp(t: List<W>): Command? {
-        if (t.none { base(it.norm) in setOf("واتساب", "واتس", "واتسب") }) return null
+        val appIndex = t.indexOfFirst { base(it.norm) in setOf("واتساب", "واتس", "واتسب") }
+        if (appIndex < 0) return null
         val digits = digitsOf(t)
-        if (digits.length < 8) return null
-        return Command.WhatsAppChat(internationalize(digits))
+        if (digits.length >= 8) return Command.WhatsAppChat(internationalize(digits))
+        val withIndex = t.indexOfFirst { it.norm in setOf("مع", "ل", "الي", "الى") }
+        val nameWords = if (withIndex >= 0) {
+            t.drop(withIndex + 1).takeWhile { it.norm !in setOf("في", "على", "واتساب", "واتس") }
+        } else {
+            t.filterIndexed { i, w ->
+                i != appIndex && w.norm !in setOf("افتح", "افتحلي", "شغل", "شغلي", "رساله", "رسالة", "ابعت", "ابعث", "ارسل", "رسائل")
+            }
+        }
+        val name = nameWords.joinToString(" ") { it.orig }.trim()
+        return name.takeIf { it.length >= 2 }?.let { Command.WhatsAppContact(it) }
     }
 
     private fun parseCall(t: List<W>): Command? {
-        if (t.first().norm !in CALL_VERBS) return null
+        val verbIndex = t.indexOfFirst { it.norm in CALL_VERBS }
+        if (verbIndex < 0) return null
         val digits = digitsOf(t)
-        if (digits.length < 3) return null
-        return Command.Call(digits)
+        if (digits.length >= 3) return Command.Call(digits)
+        val nameWords = t.drop(verbIndex + 1).filter {
+            it.norm !in setOf("ب", "بال", "على", "الي", "الى", "من", "رقم", "تليفون", "هاتف")
+        }
+        val name = nameWords.joinToString(" ") { it.orig }.trim()
+        return name.takeIf { it.length >= 2 }?.let { Command.CallContact(it) }
     }
 
     private fun parseClick(t: List<W>): Command? {
