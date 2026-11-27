@@ -36,6 +36,7 @@ class SawtAccessibilityService : AccessibilityService() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var floating: FloatingButton? = null
     private var numberOverlay: NumberOverlay? = null
+    private var commandPreview: CommandPreviewOverlay? = null
     private var numbered: List<ScreenReader.Item> = emptyList()
     private var numbersShownAt = 0L
 
@@ -43,6 +44,7 @@ class SawtAccessibilityService : AccessibilityService() {
         super.onServiceConnected()
         instance = this
         numberOverlay = NumberOverlay(this)
+        commandPreview = CommandPreviewOverlay(this)
         floating = FloatingButton(this, onTap = ::onFloatingTap, onMoved = { x, y ->
             AppGraph.settings.update { it.copy(floatX = x, floatY = y) }
         })
@@ -54,6 +56,10 @@ class SawtAccessibilityService : AccessibilityService() {
                 .collect { (settings, status) -> floating?.render(settings, status) }
         }
     }
+
+    /** يعرض معاينة قصيرة للأمر والوجهة قبل فتح تطبيق خارجي. */
+    fun showCommandPreview(spoken: String, action: String): Boolean =
+        commandPreview?.show(spoken, action) == true
 
     private fun onFloatingTap() {
         if (Permissions.hasMic(this)) {
@@ -87,6 +93,7 @@ class SawtAccessibilityService : AccessibilityService() {
         instance = null
         floating?.hide()
         numberOverlay?.hide()
+        commandPreview?.hide()
         scope.cancel()
     }
 

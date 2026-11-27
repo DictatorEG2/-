@@ -16,6 +16,7 @@ import com.sawt.voice.data.HistoryEntity
 import com.sawt.voice.parser.Command
 import com.sawt.voice.privacy.PrivacyManager
 import com.sawt.voice.settings.AppSettings
+import kotlinx.coroutines.delay
 
 data class ExecResult(
     val success: Boolean,
@@ -108,6 +109,10 @@ class CommandEngine(private val context: Context) {
     }
 
     private suspend fun runCommand(command: Command, raw: String, settings: AppSettings): ExecResult {
+        if (needsPreview(command)) {
+            val shown = SawtAccessibilityService.instance?.showCommandPreview(raw, command.label) == true
+            if (shown) delay(COMMAND_PREVIEW_DELAY_MS)
+        }
         val result = try {
             execute(command)
         } catch (t: Throwable) {
@@ -325,7 +330,15 @@ class CommandEngine(private val context: Context) {
         false
     }
 
+    private fun needsPreview(command: Command): Boolean = when (command) {
+        is Command.OpenApp, Command.OpenMessages, Command.YoutubeHome,
+        is Command.YoutubeSearch, is Command.WebSearch, is Command.TelegramSearch,
+        is Command.WhatsAppChat, is Command.WhatsAppContact, is Command.CallContact, is Command.Call -> true
+        else -> false
+    }
+
     private companion object {
         const val BRIGHTNESS_STEP = 38
+        const val COMMAND_PREVIEW_DELAY_MS = 1_200L
     }
 }
