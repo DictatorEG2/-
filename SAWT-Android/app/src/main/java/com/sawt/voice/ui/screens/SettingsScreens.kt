@@ -74,6 +74,7 @@ fun VoiceSettingsScreen(back: () -> Unit) {
             checkingUpdate = true
             scope.launch {
                 val result = withContext(Dispatchers.IO) { GithubUpdateClient.check(context) }
+                UpdateStartupCheck.markChecked(context, result !is GithubUpdateClient.CheckResult.Failed)
                 when (result) {
                     is GithubUpdateClient.CheckResult.Available -> {
                         availableRelease = result.release
