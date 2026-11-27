@@ -10,6 +10,9 @@ import androidx.core.content.ContextCompat
 import com.sawt.voice.accessibility.SawtAccessibilityService
 
 object Permissions {
+    fun hasContacts(c: Context): Boolean =
+        ContextCompat.checkSelfPermission(c, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED
+
     fun hasMic(c: Context): Boolean =
         ContextCompat.checkSelfPermission(c, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
 
