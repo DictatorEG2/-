@@ -46,6 +46,13 @@ sealed interface Command {
     data class WhatsAppChat(val number: String) : Command {
         override val label: String get() = "فتح محادثة واتساب"
     }
+    data class CallContact(val name: String) : Command {
+        override val label: String get() = "الاتصال بجهة اتصال: $name"
+        override val sensitive: Boolean get() = true
+    }
+    data class WhatsAppContact(val name: String) : Command {
+        override val label: String get() = "فتح محادثة واتساب مع: $name"
+    }
     data class Call(val number: String) : Command {
         override val label: String get() = "اتصال هاتفي"
         override val sensitive: Boolean get() = true
