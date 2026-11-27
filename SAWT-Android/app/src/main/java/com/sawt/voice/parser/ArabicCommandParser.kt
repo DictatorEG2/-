@@ -40,6 +40,7 @@ class ArabicCommandParser {
     private fun parseWords(t: List<W>): Command {
         parseDictation(t)?.let { return it }
         parseYoutube(t)?.let { return it }
+        parseLike(t)?.let { return it }
         parseWhatsApp(t)?.let { return it }
         parseCall(t)?.let { return it }
         parseClick(t)?.let { return it }
@@ -69,8 +70,16 @@ class ArabicCommandParser {
         val verbIdx = cleaned.indexOfFirst { it.norm in SEARCH_VERBS }
         var rest = cleaned.drop(verbIdx + 1)
         if (rest.firstOrNull()?.norm in setOf("عن", "علي")) rest = rest.drop(1)
-        if (rest.isEmpty()) return null
+        if (rest.isEmpty()) return Command.YoutubeHome
         return Command.YoutubeSearch(rest.joinToString(" ") { it.orig })
+    }
+
+    private fun parseLike(t: List<W>): Command? {
+        val n = t.map { it.norm }.toSet()
+        if (n.any { it in setOf("لايك", "لايكه", "اعجاب") } &&
+            n.any { it in setOf("لايك", "لايكه", "اعجاب", "اعمل", "حط", "دوس", "اضغط") }
+        ) return Command.ClickText("like")
+        return null
     }
 
     private fun parseWhatsApp(t: List<W>): Command? {
@@ -153,7 +162,7 @@ class ArabicCommandParser {
             "لو", "سمحت", "فضلك", "ممكن", "عايز", "عاوز", "اريد", "الان", "بقي",
             "خلاص", "يعني", "ياريت", "معلش", "طيب", "لي",
         )
-        private val OPEN_VERBS = setOf("افتح", "افتحلي", "شغل", "شغلي", "ادخل", "هات", "هاتلي", "روح")
+        private val OPEN_VERBS = setOf("افتح", "افتحلي", "شغل", "شغلي", "ادخل", "هات", "هاتلي", "روح", "وريني")
         private val APP_NOISE = setOf("علي", "الي", "تطبيق", "برنامج", "لتطبيق", "ل")
         private val CLICK_VERBS = setOf("اضغط", "دوس", "اختار", "انقر", "اضغطي", "دوسي", "اختر")
         private val CLICK_NOISE = setOf("علي", "الي", "العنصر", "عنصر", "رقم", "زر", "الزر", "الخيار", "خيار")
@@ -190,9 +199,9 @@ class ArabicCommandParser {
             ),
             Rule(Command.ScrollDown, listOf("انزل", "تحت", "لتحت", "مرر لأسفل", "مرر للأسفل", "نزل")),
             Rule(Command.ScrollUp, listOf("اطلع", "فوق", "لفوق", "مرر لأعلى", "مرر للأعلى")),
-            Rule(Command.VolumeUp, listOf("ارفع الصوت", "علي الصوت", "علّي الصوت", "زود الصوت", "رفع الصوت")),
-            Rule(Command.VolumeDown, listOf("وطي الصوت", "وطّي الصوت", "اخفض الصوت", "خفض الصوت", "وطي")),
-            Rule(Command.Mute, listOf("اكتم الصوت", "كتم الصوت", "اكتم", "وضع الصامت")),
+            Rule(Command.VolumeUp, listOf("ارفع الصوت", "علي الصوت", "علّي الصوت", "زود الصوت", "رفع الصوت", "اعلي الصوت", "كبر الصوت", "زودلي الصوت", "عليلي الصوت", "ارفعلي الصوت", "الصوت اعلى", "خلي الصوت اعلى")),
+            Rule(Command.VolumeDown, listOf("وطي الصوت", "وطّي الصوت", "اخفض الصوت", "خفض الصوت", "وطي", "وطيلي الصوت", "قلل الصوت", "نزل الصوت", "خفضلي الصوت", "الصوت اوطى", "خلي الصوت اوطى", "قلل مستوى الصوت")),
+            Rule(Command.Mute, listOf("اكتم الصوت", "كتم الصوت", "اكتم", "وضع الصامت", "اسكت الصوت", "اقفل الصوت")),
             Rule(Command.BrightnessUp, listOf("زود الإضاءة", "ارفع الإضاءة", "علي الإضاءة", "زود السطوع", "ارفع السطوع")),
             Rule(Command.BrightnessDown, listOf("قلل الإضاءة", "وطي الإضاءة", "اخفض الإضاءة", "قلل السطوع", "اخفض السطوع")),
             Rule(
