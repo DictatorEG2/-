@@ -8,7 +8,7 @@ import com.sawt.voice.parser.ArabicNormalizer
 /** يحوّل اسم تطبيق منطوق إلى Intent إطلاق. قائمة التطبيقات تُخزَّن مؤقتًا 5 دقائق. */
 class AppResolver(private val context: Context) {
 
-    private class Entry(val norm: String, val pkg: String)
+    private class Entry(val norm: String, val latin: String, val pkg: String)
     private class Alias(val packages: List<String>, val labels: List<String>)
 
     @Volatile private var cache: List<Entry> = emptyList()
@@ -24,8 +24,8 @@ class AppResolver(private val context: Context) {
                 val pkg = info.activityInfo.packageName
                 val label = info.loadLabel(pm).toString()
                 listOf(
-                    Entry(ArabicNormalizer.normalize(label), pkg),
-                    Entry(ArabicNormalizer.normalize(pkg.substringAfterLast('.').replace('_', ' ')), pkg),
+                    Entry(ArabicNormalizer.normalize(label), transliterate(ArabicNormalizer.normalize(label)), pkg),
+                    Entry(ArabicNormalizer.normalize(pkg.substringAfterLast('.').replace('_', ' ')), transliterate(ArabicNormalizer.normalize(pkg.substringAfterLast('.').replace('_', ' '))), pkg),
                 )
             }
             .distinctBy { "${it.norm}|${it.pkg}" }
@@ -48,7 +48,8 @@ class AppResolver(private val context: Context) {
         findByLabel(query)?.let { return it }
         val normalizedQuery = stripAl(query)
         if (normalizedQuery.length >= 3) {
-            val best = entries().map { it to similarity(normalizedQuery, stripAl(it.norm)) }
+            val latinQuery = transliterate(normalizedQuery)
+            val best = entries().map { it to maxOf(similarity(normalizedQuery, stripAl(it.norm)), similarity(latinQuery, it.latin)) }
                 .filter { it.second >= if (normalizedQuery.length <= 4) 0.88 else 0.76 }
                 .maxByOrNull { it.second }?.first
             best?.let { context.packageManager.getLaunchIntentForPackage(it.pkg) }?.let { return it }
@@ -60,11 +61,12 @@ class AppResolver(private val context: Context) {
         val key = stripAl(ArabicNormalizer.normalize(query))
         if (key.length < 2) return null
         val all = entries()
-        val hit = all.firstOrNull { stripAl(it.norm) == key }
-            ?: all.firstOrNull { stripAl(it.norm).startsWith(key) }
-            ?: if (key.length >= 3) all.firstOrNull { it.norm.contains(key) } else null
-            ?: if (key.length >= 4) all.map { it to similarity(key, stripAl(it.norm)) }
-                .filter { it.second >= 0.76 }
+        val latinKey = transliterate(key)
+        val hit = all.firstOrNull { stripAl(it.norm) == key || it.latin == latinKey }
+            ?: all.firstOrNull { stripAl(it.norm).startsWith(key) || it.latin.startsWith(latinKey) }
+            ?: if (key.length >= 3) all.firstOrNull { it.norm.contains(key) || it.latin.contains(latinKey) } else null
+            ?: if (key.length >= 4) all.map { it to maxOf(similarity(key, stripAl(it.norm)), similarity(latinKey, it.latin)) }
+                .filter { it.second >= 0.70 }
                 .maxByOrNull { it.second }?.first else null
         return hit?.let { context.packageManager.getLaunchIntentForPackage(it.pkg) }
     }
@@ -73,6 +75,17 @@ class AppResolver(private val context: Context) {
     fun messagesIntent(): Intent? {
         val i = Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_MESSAGING)
         return if (i.resolveActivity(context.packageManager) != null) i else null
+    }
+
+    private fun transliterate(value: String): String {
+        val map = mapOf(
+            'ا' to "a", 'ب' to "b", 'ت' to "t", 'ث' to "th", 'ج' to "g", 'ح' to "h",
+            'خ' to "kh", 'د' to "d", 'ذ' to "z", 'ر' to "r", 'ز' to "z", 'س' to "s",
+            'ش' to "sh", 'ص' to "s", 'ض' to "d", 'ط' to "t", 'ظ' to "z", 'ع' to "a",
+            'غ' to "gh", 'ف' to "f", 'ق' to "q", 'ك' to "k", 'ل' to "l", 'م' to "m",
+            'ن' to "n", 'ه' to "h", 'و' to "w", 'ي' to "y", 'ى' to "a"
+        )
+        return value.map { map[it] ?: it.toString() }.joinToString("")
     }
 
     private fun similarity(a: String, b: String): Double {
@@ -137,6 +150,10 @@ class AppResolver(private val context: Context) {
             "فيس" to Alias(listOf("com.facebook.katana", "com.facebook.lite"), listOf("facebook")),
             "فيسبك" to Alias(listOf("com.facebook.katana", "com.facebook.lite"), listOf("facebook")),
             "واتساب" to Alias(listOf("com.whatsapp", "com.whatsapp.w4b"), listOf("whatsapp")),
+            "واتس اب" to Alias(listOf("com.whatsapp", "com.whatsapp.w4b"), listOf("whatsapp")),
+            "كلاود" to Alias(emptyList(), listOf("cloud", "cloudflare", "google drive", "onedrive")),
+            "جوجل درايف" to Alias(listOf("com.google.android.apps.docs"), listOf("google drive", "drive")),
+            "درايف" to Alias(listOf("com.google.android.apps.docs"), listOf("google drive", "drive")),
             "واتس" to Alias(listOf("com.whatsapp", "com.whatsapp.w4b"), listOf("whatsapp")),
             "يوتيوب" to Alias(listOf("com.google.android.youtube"), listOf("youtube")),
             "كروم" to Alias(listOf("com.android.chrome"), listOf("chrome")),
