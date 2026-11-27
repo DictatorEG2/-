@@ -56,6 +56,7 @@ class ArabicCommandParser {
         val words = t.map { it.norm }.toSet()
         val capture = setOf("صور", "صورلي", "التقط", "التقاط", "خد", "خدلي", "التقطلي", "capture", "photo", "picture", "shutter")
         val cameraContext = words.any { it in setOf("كاميرا", "الكاميرا", "صوره", "تصوير") }
+        if (words.any { it in setOf("شاشه", "الشاشه", "سكرين", "سكرينشوت") }) return null
         return if (words.any { it in capture } && (cameraContext || words.size <= 2)) Command.TakePhoto else null
     }
 
