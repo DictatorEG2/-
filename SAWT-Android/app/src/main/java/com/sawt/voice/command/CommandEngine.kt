@@ -298,12 +298,14 @@ class CommandEngine(private val context: Context) {
         if (context.checkSelfPermission(android.Manifest.permission.READ_CONTACTS) !=
             android.content.pm.PackageManager.PERMISSION_GRANTED
         ) return null
-        val phone = android.provider.ContactsContract.CommonDataKinds.Phone
-        val projection = arrayOf(phone.DISPLAY_NAME, phone.NUMBER)
+        val phoneUri = android.provider.ContactsContract.CommonDataKinds.Phone.CONTENT_URI
+        val displayNameColumn = android.provider.ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME
+        val numberColumn = android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER
+        val projection = arrayOf(displayNameColumn, numberColumn)
         return runCatching {
-            context.contentResolver.query(phone.CONTENT_URI, projection, null, null, null)?.use { cursor ->
-                val nameIndex = cursor.getColumnIndexOrThrow(phone.DISPLAY_NAME)
-                val numberIndex = cursor.getColumnIndexOrThrow(phone.NUMBER)
+            context.contentResolver.query(phoneUri, projection, null, null, null)?.use { cursor ->
+                val nameIndex = cursor.getColumnIndexOrThrow(displayNameColumn)
+                val numberIndex = cursor.getColumnIndexOrThrow(numberColumn)
                 val query = normalizeContact(name)
                 var bestNumber: String? = null
                 var bestScore = 0.0
