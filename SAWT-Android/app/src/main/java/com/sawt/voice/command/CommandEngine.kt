@@ -191,6 +191,20 @@ class CommandEngine(private val context: Context) {
             val uri = Uri.parse("https://www.youtube.com/results?search_query=" + Uri.encode(c.query))
             ok(launch(Intent(Intent.ACTION_VIEW, uri)), "نتائج البحث في يوتيوب", "تعذر فتح يوتيوب")
         }
+        is Command.WebSearch -> {
+            val uri = Uri.parse("https://www.google.com/search?q=" + Uri.encode(c.query))
+            ok(launch(Intent(Intent.ACTION_VIEW, uri)), "فتحت نتائج البحث في المتصفح", "تعذر فتح المتصفح")
+        }
+        is Command.TelegramSearch -> {
+            val uri = Uri.parse("tg://search?query=" + Uri.encode(c.query))
+            val searchIntent = Intent(Intent.ACTION_VIEW, uri).setPackage("org.telegram.messenger")
+            if (launch(searchIntent)) {
+                ExecResult(true, "فتحت بحث تليجرام")
+            } else {
+                val appIntent = AppGraph.resolver.resolve("تليجرام")
+                ok(appIntent != null && launch(appIntent), "فتحت تليجرام. استخدم علامة البحث للوصول إلى النتائج", "لم أجد تطبيق تليجرام")
+            }
+        }
         is Command.WhatsAppChat -> {
             val uri = Uri.parse("https://wa.me/${c.number}")
             val viaApp = Intent(Intent.ACTION_VIEW, uri).setPackage("com.whatsapp")

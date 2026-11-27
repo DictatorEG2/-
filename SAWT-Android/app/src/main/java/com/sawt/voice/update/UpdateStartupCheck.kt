@@ -28,6 +28,40 @@ object UpdateStartupCheck {
             .apply()
     }
 
+    fun cacheRelease(context: Context, release: GithubUpdateClient.Release) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putString("release_tag", release.tag)
+            .putString("release_name", release.name)
+            .putString("release_notes", release.notes)
+            .putString("release_apk_url", release.apkUrl)
+            .putString("release_page_url", release.pageUrl)
+            .apply()
+    }
+
+    fun cachedRelease(context: Context): GithubUpdateClient.Release? {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val tag = prefs.getString("release_tag", null)?.takeIf { it.isNotBlank() } ?: return null
+        val apkUrl = prefs.getString("release_apk_url", null)?.takeIf { it.startsWith("https://github.com/") } ?: return null
+        val pageUrl = prefs.getString("release_page_url", null)?.takeIf { it.startsWith("https://github.com/") } ?: return null
+        return GithubUpdateClient.Release(
+            tag = tag,
+            name = prefs.getString("release_name", tag) ?: tag,
+            notes = prefs.getString("release_notes", "").orEmpty(),
+            apkUrl = apkUrl,
+            pageUrl = pageUrl,
+        )
+    }
+
+    fun clearCachedRelease(context: Context) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .remove("release_tag")
+            .remove("release_name")
+            .remove("release_notes")
+            .remove("release_apk_url")
+            .remove("release_page_url")
+            .apply()
+    }
+
     fun notifyAvailable(context: Context, tag: String) {
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if (Build.VERSION.SDK_INT >= 26) {

@@ -36,8 +36,13 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch(Dispatchers.IO) {
             val result = GithubUpdateClient.check(this@MainActivity)
             UpdateStartupCheck.markChecked(this@MainActivity, result !is GithubUpdateClient.CheckResult.Failed)
-            if (result is GithubUpdateClient.CheckResult.Available) {
-                UpdateStartupCheck.notifyAvailable(this@MainActivity, result.release.tag)
+            when (result) {
+                is GithubUpdateClient.CheckResult.Available -> {
+                    UpdateStartupCheck.cacheRelease(this@MainActivity, result.release)
+                    UpdateStartupCheck.notifyAvailable(this@MainActivity, result.release.tag)
+                }
+                GithubUpdateClient.CheckResult.UpToDate -> UpdateStartupCheck.clearCachedRelease(this@MainActivity)
+                is GithubUpdateClient.CheckResult.Failed -> Unit
             }
         }
     }

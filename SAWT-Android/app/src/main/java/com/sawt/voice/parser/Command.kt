@@ -45,6 +45,12 @@ sealed interface Command {
     data class YoutubeSearch(val query: String) : Command {
         override val label: String get() = "بحث في يوتيوب: $query"
     }
+    data class WebSearch(val query: String) : Command {
+        override val label: String get() = "بحث في المتصفح: $query"
+    }
+    data class TelegramSearch(val query: String) : Command {
+        override val label: String get() = "بحث في تليجرام: $query"
+    }
     data class WhatsAppChat(val number: String) : Command {
         override val label: String get() = "فتح محادثة واتساب"
     }

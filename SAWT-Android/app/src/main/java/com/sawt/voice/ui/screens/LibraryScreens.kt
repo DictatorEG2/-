@@ -103,7 +103,7 @@ fun ShortcutsScreen(back: () -> Unit) {
         ) {
             item {
                 Text(
-                    "اربط عبارة تقولها بأي أمر مدعوم. مثال: العبارة «شغّل الأخبار» ← الأمر «ابحث في يوتيوب عن الأخبار».",
+                    "حوّل أي كلمة أو رقم إلى زر صوتي خاص بك. قل «واحد» لفتح يوتيوب، أو اربط «اثنين» بالاتصال بشخص، أو «خمسة» بمحادثة واتساب. أنت تحدد العبارة والإجراء والصلاحيات.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -149,6 +149,15 @@ fun ShortcutsScreen(back: () -> Unit) {
             title = { Text("اختصار جديد") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text("قوالب سريعة — اختر واحدًا ثم عدّل الاسم أو الأمر", style = MaterialTheme.typography.titleSmall)
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        TextButton(onClick = { phrase = "واحد"; target = "افتح يوتيوب" }) { Text("١ ← يوتيوب") }
+                        TextButton(onClick = { phrase = "اثنين"; target = "اتصل بأحمد" }) { Text("٢ ← اتصال") }
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        TextButton(onClick = { phrase = "خمسة"; target = "افتح محادثة واتساب مع علي" }) { Text("٥ ← واتساب") }
+                        TextButton(onClick = { phrase = "ثلاثة"; target = "ابحث في المتصفح عن الأخبار" }) { Text("٣ ← بحث") }
+                    }
                     OutlinedTextField(
                         value = phrase, onValueChange = { phrase = it }, singleLine = true,
                         label = { Text("العبارة التي ستقولها") }, colors = sawtTextFieldColors(),
@@ -158,6 +167,11 @@ fun ShortcutsScreen(back: () -> Unit) {
                         value = target, onValueChange = { target = it }, singleLine = true,
                         label = { Text("الأمر الذي سيُنفَّذ") }, colors = sawtTextFieldColors(),
                         modifier = Modifier.fillMaxWidth(),
+                    )
+                    Text(
+                        "الاتصال يتطلب تأكيد «نعم». فتح واتساب لا يرسل رسالة تلقائيًا. ابحث عن جهات الاتصال بالاسم بعد منح الإذن الاختياري.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     error?.let { Text(it, color = SawtColors.CrimsonLight, style = MaterialTheme.typography.bodySmall) }
                 }

@@ -49,6 +49,7 @@ import com.sawt.voice.ui.components.rememberResumeTick
 import com.sawt.voice.ui.theme.SawtColors
 import com.sawt.voice.util.Permissions
 import com.sawt.voice.update.GithubUpdateClient
+import com.sawt.voice.update.UpdateStartupCheck
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -57,8 +58,14 @@ fun VoiceSettingsScreen(back: () -> Unit) {
     val s by AppGraph.settings.settings.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    var updateStatus by remember { mutableStateOf("سيتم فحص التحديثات تلقائيًا عند فتح هذه الشاشة.") }
-    var availableRelease by remember { mutableStateOf<GithubUpdateClient.Release?>(null) }
+    val cachedRelease = remember(context) { UpdateStartupCheck.cachedRelease(context) }
+    var updateStatus by remember {
+        mutableStateOf(
+            cachedRelease?.let { "يتوفر إصدار ${it.tag}: ${it.name}" }
+                ?: "يُفحص التحديث تلقائيًا مرة كل 24 ساعة. يمكنك الفحص يدويًا."
+        )
+    }
+    var availableRelease by remember { mutableStateOf<GithubUpdateClient.Release?>(cachedRelease) }
     var checkingUpdate by remember { mutableStateOf(false) }
     var downloadingUpdate by remember { mutableStateOf(false) }
 
@@ -67,17 +74,28 @@ fun VoiceSettingsScreen(back: () -> Unit) {
             checkingUpdate = true
             scope.launch {
                 val result = withContext(Dispatchers.IO) { GithubUpdateClient.check(context) }
-                availableRelease = (result as? GithubUpdateClient.CheckResult.Available)?.release
-                updateStatus = when (result) {
-                    is GithubUpdateClient.CheckResult.Available -> "يتوفر إصدار ${result.release.tag}: ${result.release.name}"
-                    GithubUpdateClient.CheckResult.UpToDate -> "أنت تستخدم أحدث إصدار متاح."
-                    is GithubUpdateClient.CheckResult.Failed -> result.message
+                when (result) {
+                    is GithubUpdateClient.CheckResult.Available -> {
+                        availableRelease = result.release
+                        UpdateStartupCheck.cacheRelease(context, result.release)
+                        updateStatus = "يتوفر إصدار ${result.release.tag}: ${result.release.name}"
+                    }
+                    GithubUpdateClient.CheckResult.UpToDate -> {
+                        availableRelease = null
+                        UpdateStartupCheck.clearCachedRelease(context)
+                        updateStatus = "أنت تستخدم أحدث إصدار متاح."
+                    }
+                    is GithubUpdateClient.CheckResult.Failed -> {
+                        updateStatus = result.message
+                    }
                 }
                 checkingUpdate = false
             }
         }
     }
-    LaunchedEffect(Unit) { checkForUpdates() }
+    LaunchedEffect(Unit) {
+        if (availableRelease == null && UpdateStartupCheck.shouldCheck(context)) checkForUpdates()
+    }
 
     SawtScaffold("إعدادات الصوت والتعرف", back) { pad ->
         ScreenColumn(pad) {
@@ -148,6 +166,9 @@ fun VoiceSettingsScreen(back: () -> Unit) {
             SectionLabel("تحديث التطبيق")
             SawtCard(accent = SawtColors.Blue) {
                 Text("التحديثات الرسمية", style = MaterialTheme.typography.titleMedium)
+                if (availableRelease != null) {
+                    StatusPill("تحديث متاح", SawtColors.BlueLight)
+                }
                 Text(
                     updateStatus,
                     style = MaterialTheme.typography.bodyMedium,

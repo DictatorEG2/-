@@ -40,6 +40,8 @@ class ArabicCommandParser {
     private fun parseWords(t: List<W>): Command {
         parseDictation(t)?.let { return it }
         parseYoutube(t)?.let { return it }
+        parseTelegram(t)?.let { return it }
+        parseWebSearch(t)?.let { return it }
         parseLike(t)?.let { return it }
         parseWhatsApp(t)?.let { return it }
         parseCall(t)?.let { return it }
@@ -72,6 +74,34 @@ class ArabicCommandParser {
         if (rest.firstOrNull()?.norm in setOf("عن", "علي")) rest = rest.drop(1)
         if (rest.isEmpty()) return Command.YoutubeHome
         return Command.YoutubeSearch(rest.joinToString(" ") { it.orig })
+    }
+
+    private fun parseTelegram(t: List<W>): Command? {
+        val appIndex = t.indexOfFirst { base(it.norm) in TELEGRAM_WORDS }
+        if (appIndex < 0 || t.none { it.norm in SEARCH_VERBS }) return null
+        val cleaned = t.filterIndexed { i, w ->
+            i != appIndex && !(i == appIndex - 1 && w.norm in setOf("في", "على", "ب"))
+        }
+        val verbIndex = cleaned.indexOfFirst { it.norm in SEARCH_VERBS }
+        var query = cleaned.drop(verbIndex + 1)
+        if (query.firstOrNull()?.norm in setOf("عن", "على")) query = query.drop(1)
+        return query.takeIf { it.isNotEmpty() }?.let {
+            Command.TelegramSearch(it.joinToString(" ") { word -> word.orig })
+        }
+    }
+
+    private fun parseWebSearch(t: List<W>): Command? {
+        val browserIndex = t.indexOfFirst { it.norm in WEB_SEARCH_WORDS }
+        if (browserIndex < 0 || t.none { it.norm in SEARCH_VERBS }) return null
+        val cleaned = t.filterIndexed { i, w ->
+            i != browserIndex && !(i == browserIndex - 1 && w.norm in setOf("في", "على", "ب"))
+        }
+        val verbIndex = cleaned.indexOfFirst { it.norm in SEARCH_VERBS }
+        var query = cleaned.drop(verbIndex + 1)
+        if (query.firstOrNull()?.norm in setOf("عن", "على")) query = query.drop(1)
+        return query.takeIf { it.isNotEmpty() }?.let {
+            Command.WebSearch(it.joinToString(" ") { word -> word.orig })
+        }
     }
 
     private fun parseLike(t: List<W>): Command? {
@@ -185,6 +215,8 @@ class ArabicCommandParser {
         private val CLICK_NOISE = setOf("علي", "الي", "العنصر", "عنصر", "رقم", "زر", "الزر", "الخيار", "خيار")
         private val DICTATION_VERBS = setOf("اكتب", "اكتبلي", "املي")
         private val SEARCH_VERBS = setOf("ابحث", "ابحثلي", "دور", "دورلي")
+        private val TELEGRAM_WORDS = setOf("تليجرام", "تلجرام", "تيليجرام")
+        private val WEB_SEARCH_WORDS = setOf("متصفح", "المتصفح", "جوجل", "كروم", "انترنت", "الانترنت")
         private val CALL_VERBS = setOf("اتصل", "كلم", "رن", "اطلب")
 
         private val NUMBER_WORDS = mapOf(

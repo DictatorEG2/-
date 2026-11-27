@@ -77,6 +77,13 @@ class ArabicCommandParserTest {
         assertEquals(Command.YoutubeSearch("القرآن الكريم"), cmd("ابحث عن القرآن الكريم في يوتيوب"))
     }
 
+    @Test fun browserAndTelegramSearch() {
+        assertEquals(Command.WebSearch("الذكاء الاصطناعي"), cmd("ابحث في المتصفح عن الذكاء الاصطناعي"))
+        assertEquals(Command.WebSearch("Kotlin"), cmd("دور في كروم عن Kotlin"))
+        assertEquals(Command.WebSearch("الأخبار"), cmd("ابحث في جوجل عن الأخبار"))
+        assertEquals(Command.TelegramSearch("Dictator"), cmd("ابحث في تليجرام عن Dictator"))
+    }
+
     @Test fun expandedEgyptianVolumeAndYoutubeCommands() {
         listOf("عليلي الصوت", "كبر الصوت", "خلي الصوت اعلى").forEach {
             assertEquals(Command.VolumeUp, cmd(it))
