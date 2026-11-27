@@ -251,6 +251,7 @@ fun PermissionsScreen(back: () -> Unit) {
     val context = LocalContext.current
     val tick = rememberResumeTick()
     var refresh by remember { mutableIntStateOf(0) }
+    val camera = remember(tick, refresh) { Permissions.hasCamera(context) }
     val contacts = remember(tick, refresh) { Permissions.hasContacts(context) }
     val mic = remember(tick, refresh) { Permissions.hasMic(context) }
     val notif = remember(tick, refresh) { Permissions.hasNotifications(context) }
@@ -258,6 +259,7 @@ fun PermissionsScreen(back: () -> Unit) {
     val write = remember(tick, refresh) { Permissions.canWriteSettings(context) }
     var showDisclosure by remember { mutableStateOf(false) }
 
+    val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { refresh++ }
     val contactsLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { refresh++ }
     val micLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { refresh++ }
     val notifLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { refresh++ }
@@ -276,6 +278,13 @@ fun PermissionsScreen(back: () -> Unit) {
                 granted = mic,
                 actionLabel = "السماح بالميكروفون",
             ) { micLauncher.launch(Manifest.permission.RECORD_AUDIO) }
+
+            PermissionCard(
+                title = "الكاميرا (للكشاف فقط)",
+                reason = "يستخدم صَوْت إذن الكاميرا حصريًا لتشغيل فلاش الهاتف أو إيقافه بأمرك. لا يلتقط صورًا ولا يسجل فيديو.",
+                granted = camera,
+                actionLabel = "السماح بالكشاف",
+            ) { cameraLauncher.launch(Manifest.permission.CAMERA) }
 
             PermissionCard(
                 title = "جهات الاتصال (اختياري)",
