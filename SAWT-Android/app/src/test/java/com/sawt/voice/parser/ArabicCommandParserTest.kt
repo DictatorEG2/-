@@ -77,6 +77,18 @@ class ArabicCommandParserTest {
         assertEquals(Command.YoutubeSearch("القرآن الكريم"), cmd("ابحث عن القرآن الكريم في يوتيوب"))
     }
 
+    @Test fun expandedEgyptianVolumeAndYoutubeCommands() {
+        listOf("عليلي الصوت", "كبر الصوت", "خلي الصوت اعلى").forEach {
+            assertEquals(Command.VolumeUp, cmd(it))
+        }
+        listOf("وطيلي الصوت", "قلل الصوت", "نزل الصوت").forEach {
+            assertEquals(Command.VolumeDown, cmd(it))
+        }
+        assertEquals(Command.YoutubeHome, cmd("ابحث في يوتيوب"))
+        assertEquals(Command.ClickText("like"), cmd("حط لايك"))
+        assertEquals(Command.ClickText("like"), cmd("اعمل لايك"))
+    }
+
     @Test fun callIsSensitiveAndWhatsAppNumberIsInternational() {
         val call = cmd("اتصل بالرقم 01001234567")
         assertEquals(Command.Call("01001234567"), call)
