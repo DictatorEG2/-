@@ -1,0 +1,19 @@
+name: ملاحظات واقتراحات
+description: شارك ملاحظاتك حول تجربة الاستخدام
+title: "[Feedback]: "
+labels: ["feedback"]
+body:
+  - type: textarea
+    id: feedback
+    attributes:
+      label: الملاحظة
+      description: ما الذي يعمل جيدًا أو يحتاج إلى تحسين؟
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: السياق
+      description: اذكر الجزء المتأثر أو سبب أهمية الملاحظة.
+    validations:
+      required: false
