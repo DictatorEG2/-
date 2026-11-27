@@ -37,7 +37,16 @@ class AppResolver(private val context: Context) {
             for (pkg in alias.packages) pm.getLaunchIntentForPackage(pkg)?.let { return it }
             for (label in alias.labels) findByLabel(label)?.let { return it }
         }
-        return findByLabel(tokens.joinToString(" "))
+        val query = tokens.joinToString(" ")
+        findByLabel(query)?.let { return it }
+        val normalizedQuery = stripAl(query)
+        if (normalizedQuery.length >= 3) {
+            val best = entries().map { it to similarity(normalizedQuery, stripAl(it.norm)) }
+                .filter { it.second >= 0.78 }
+                .maxByOrNull { it.second }?.first
+            best?.let { context.packageManager.getLaunchIntentForPackage(it.pkg) }?.let { return it }
+        }
+        return null
     }
 
     private fun findByLabel(query: String): Intent? {
@@ -56,6 +65,27 @@ class AppResolver(private val context: Context) {
         return if (i.resolveActivity(context.packageManager) != null) i else null
     }
 
+    private fun similarity(a: String, b: String): Double {
+        if (a == b) return 1.0
+        if (a.isBlank() || b.isBlank()) return 0.0
+        val longer = maxOf(a.length, b.length)
+        return 1.0 - levenshtein(a, b).toDouble() / longer
+    }
+
+    private fun levenshtein(a: String, b: String): Int {
+        var previous = IntArray(b.length + 1) { it }
+        for (i in a.indices) {
+            val current = IntArray(b.length + 1)
+            current[0] = i + 1
+            for (j in b.indices) {
+                val cost = if (a[i] == b[j]) 0 else 1
+                current[j + 1] = minOf(current[j] + 1, previous[j + 1] + 1, previous[j] + cost)
+            }
+            previous = current
+        }
+        return previous[b.length]
+    }
+
     private fun stripAl(s: String) = if (s.startsWith("ال") && s.length > 3) s.drop(2) else s
 
     private companion object {
@@ -63,6 +93,13 @@ class AppResolver(private val context: Context) {
 
         // المفاتيح بصيغتها المطبّعة وبدون «ال».
         val ALIASES: Map<String, Alias> = mapOf(
+            "شات جي بي تي" to Alias(listOf("com.openai.chatgpt"), listOf("chatgpt", "chat gpt", "شات جي بي تي")),
+            "تشات جي بي تي" to Alias(listOf("com.openai.chatgpt"), listOf("chatgpt", "chat gpt")),
+            "شاتجبت" to Alias(listOf("com.openai.chatgpt"), listOf("chatgpt", "chat gpt")),
+            "ترجمان" to Alias(emptyList(), listOf("tarjuman", "translator", "translation", "ترجمان")),
+            "ترجمات" to Alias(emptyList(), listOf("tarjuman", "translator", "translation", "translate")),
+            "تحميل" to Alias(emptyList(), listOf("tahmel", "download", "downloader", "تحميل")),
+            "داونلود" to Alias(emptyList(), listOf("download", "downloader", "tahmel")),
             "فيسبوك" to Alias(listOf("com.facebook.katana", "com.facebook.lite"), listOf("facebook")),
             "فيس" to Alias(listOf("com.facebook.katana", "com.facebook.lite"), listOf("facebook")),
             "فيسبك" to Alias(listOf("com.facebook.katana", "com.facebook.lite"), listOf("facebook")),
