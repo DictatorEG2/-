@@ -288,6 +288,7 @@ fun PermissionsScreen(back: () -> Unit) {
 
     val cameraLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { refresh++ }
     val contactsLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { refresh++ }
+    val callLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { refresh++ }
     val micLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { refresh++ }
     val notifLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { refresh++ }
 
@@ -312,6 +313,13 @@ fun PermissionsScreen(back: () -> Unit) {
                 granted = camera,
                 actionLabel = "السماح بالكشاف",
             ) { cameraLauncher.launch(Manifest.permission.CAMERA) }
+
+            PermissionCard(
+                title = "الاتصال المباشر (اختياري)",
+                reason = "بعد قول «اتصل بأحمد» ثم تأكيد «نعم»، يمكن لصَوْت بدء المكالمة مباشرة بدل فتح شاشة الاتصال. لن يبدأ الاتصال قبل التأكيد الصوتي.",
+                granted = context.checkSelfPermission(Manifest.permission.CALL_PHONE) == android.content.pm.PackageManager.PERMISSION_GRANTED,
+                actionLabel = "السماح بالاتصال المباشر",
+            ) { callLauncher.launch(Manifest.permission.CALL_PHONE) }
 
             PermissionCard(
                 title = "جهات الاتصال (اختياري)",
