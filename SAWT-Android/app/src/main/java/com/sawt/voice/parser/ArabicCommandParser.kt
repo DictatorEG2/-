@@ -107,7 +107,7 @@ class ArabicCommandParser {
         val nameWords = t.drop(verbIndex + 1).filter {
             it.norm !in setOf("ب", "بال", "على", "الي", "الى", "من", "رقم", "تليفون", "هاتف")
         }
-        val name = nameWords.joinToString(" ") { it.orig }.trim()
+        val name = nameWords.joinToString(" ") { it.orig.removePrefix("ب").removePrefix("ل") }.trim()
         return name.takeIf { it.length >= 2 }?.let { Command.CallContact(it) }
     }
 
