@@ -87,6 +87,16 @@ class ArabicCommandParserTest {
         assertEquals(Command.YoutubeHome, cmd("ابحث في يوتيوب"))
         assertEquals(Command.ClickText("like"), cmd("حط لايك"))
         assertEquals(Command.ClickText("like"), cmd("اعمل لايك"))
+        assertEquals(Command.TorchOn, cmd("افتح الكشاف"))
+        assertEquals(Command.TorchOn, cmd("شغل الفلاش"))
+        assertEquals(Command.TorchOff, cmd("اطفي الفلاش"))
+    }
+
+    @Test fun contactNameCommands() {
+        val call = cmd("اتصل بعلي")
+        assertEquals(Command.CallContact("علي"), call)
+        assertTrue(call.sensitive)
+        assertEquals(Command.WhatsAppContact("علي"), cmd("ابعت رسالة لعلي في الواتساب"))
     }
 
     @Test fun callIsSensitiveAndWhatsAppNumberIsInternational() {
