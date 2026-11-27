@@ -86,6 +86,11 @@ fun VoiceSettingsScreen(back: () -> Unit) {
                         UpdateStartupCheck.clearCachedRelease(context)
                         updateStatus = "أنت تستخدم أحدث إصدار متاح."
                     }
+                    GithubUpdateClient.CheckResult.NoRelease -> {
+                        availableRelease = null
+                        UpdateStartupCheck.clearCachedRelease(context)
+                        updateStatus = "لم يُنشر إصدار على GitHub Releases بعد. سيظهر التحديث هنا عند نشر أول APK موقّع."
+                    }
                     is GithubUpdateClient.CheckResult.Failed -> {
                         updateStatus = result.message
                     }

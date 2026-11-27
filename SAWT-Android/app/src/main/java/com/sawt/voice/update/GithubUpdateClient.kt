@@ -21,6 +21,7 @@ object GithubUpdateClient {
     sealed interface CheckResult {
         data class Available(val release: Release) : CheckResult
         data object UpToDate : CheckResult
+        data object NoRelease : CheckResult
         data class Failed(val message: String) : CheckResult
     }
 
@@ -37,12 +38,8 @@ object GithubUpdateClient {
         return try {
             val status = connection.responseCode
             if (status != HttpURLConnection.HTTP_OK) {
-                val message = if (status == HttpURLConnection.HTTP_NOT_FOUND) {
-                    "لم يُنشر إصدار صَوْت على GitHub Releases بعد. سيعمل التحديث فور نشر أول APK موقّع."
-                } else {
-                    "تعذر فحص التحديثات (HTTP $status). حاول مرة أخرى لاحقًا."
-                }
-                return CheckResult.Failed(message)
+                if (status == HttpURLConnection.HTTP_NOT_FOUND) return CheckResult.NoRelease
+                return CheckResult.Failed("تعذر فحص التحديثات (HTTP $status). حاول مرة أخرى لاحقًا.")
             }
             val payload = connection.inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
             val json = JSONObject(payload)

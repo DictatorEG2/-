@@ -41,7 +41,8 @@ class MainActivity : ComponentActivity() {
                     UpdateStartupCheck.cacheRelease(this@MainActivity, result.release)
                     UpdateStartupCheck.notifyAvailable(this@MainActivity, result.release.tag)
                 }
-                GithubUpdateClient.CheckResult.UpToDate -> UpdateStartupCheck.clearCachedRelease(this@MainActivity)
+                GithubUpdateClient.CheckResult.UpToDate,
+                GithubUpdateClient.CheckResult.NoRelease -> UpdateStartupCheck.clearCachedRelease(this@MainActivity)
                 is GithubUpdateClient.CheckResult.Failed -> Unit
             }
         }
