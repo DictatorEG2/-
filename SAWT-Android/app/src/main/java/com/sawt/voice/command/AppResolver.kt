@@ -20,8 +20,15 @@ class AppResolver(private val context: Context) {
         val pm = context.packageManager
         val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
         val list = pm.queryIntentActivities(intent, 0)
-            .map { Entry(ArabicNormalizer.normalize(it.loadLabel(pm).toString()), it.activityInfo.packageName) }
-            .distinctBy { it.pkg }
+            .flatMap { info ->
+                val pkg = info.activityInfo.packageName
+                val label = info.loadLabel(pm).toString()
+                listOf(
+                    Entry(ArabicNormalizer.normalize(label), pkg),
+                    Entry(ArabicNormalizer.normalize(pkg.substringAfterLast('.').replace('_', ' ')), pkg),
+                )
+            }
+            .distinctBy { "${it.norm}|${it.pkg}" }
         cache = list
         cachedAt = now
         return list
@@ -42,7 +49,7 @@ class AppResolver(private val context: Context) {
         val normalizedQuery = stripAl(query)
         if (normalizedQuery.length >= 3) {
             val best = entries().map { it to similarity(normalizedQuery, stripAl(it.norm)) }
-                .filter { it.second >= 0.78 }
+                .filter { it.second >= if (normalizedQuery.length <= 4) 0.88 else 0.76 }
                 .maxByOrNull { it.second }?.first
             best?.let { context.packageManager.getLaunchIntentForPackage(it.pkg) }?.let { return it }
         }
@@ -56,6 +63,9 @@ class AppResolver(private val context: Context) {
         val hit = all.firstOrNull { stripAl(it.norm) == key }
             ?: all.firstOrNull { stripAl(it.norm).startsWith(key) }
             ?: if (key.length >= 3) all.firstOrNull { it.norm.contains(key) } else null
+            ?: if (key.length >= 4) all.map { it to similarity(key, stripAl(it.norm)) }
+                .filter { it.second >= 0.76 }
+                .maxByOrNull { it.second }?.first else null
         return hit?.let { context.packageManager.getLaunchIntentForPackage(it.pkg) }
     }
 
@@ -94,12 +104,24 @@ class AppResolver(private val context: Context) {
         // المفاتيح بصيغتها المطبّعة وبدون «ال».
         val ALIASES: Map<String, Alias> = mapOf(
             "شات جي بي تي" to Alias(listOf("com.openai.chatgpt"), listOf("chatgpt", "chat gpt", "شات جي بي تي")),
+            "شات جيبتي" to Alias(listOf("com.openai.chatgpt"), listOf("chatgpt", "chat gpt")),
+            "شات جبت" to Alias(listOf("com.openai.chatgpt"), listOf("chatgpt", "chat gpt")),
+            "chatgpt" to Alias(listOf("com.openai.chatgpt"), listOf("chatgpt", "chat gpt")),
+            "chat gpt" to Alias(listOf("com.openai.chatgpt"), listOf("chatgpt", "chat gpt")),
             "تشات جي بي تي" to Alias(listOf("com.openai.chatgpt"), listOf("chatgpt", "chat gpt")),
             "شاتجبت" to Alias(listOf("com.openai.chatgpt"), listOf("chatgpt", "chat gpt")),
-            "ترجمان" to Alias(emptyList(), listOf("tarjuman", "ترجمان")),
-            "ترجمات" to Alias(emptyList(), listOf("tarjuman", "ترجمان")),
-            "تحميل" to Alias(emptyList(), listOf("tahmel", "تحميل", "downloader")),
-            "داونلود" to Alias(emptyList(), listOf("tahmel", "downloader", "تحميل")),
+            "ترجمان" to Alias(emptyList(), listOf("tarjuman", "tarjuman app", "ترجمان", "ترجمات")),
+            "الترجمان" to Alias(emptyList(), listOf("tarjuman", "ترجمان", "ترجمات")),
+            "ترجمات" to Alias(emptyList(), listOf("tarjuman", "ترجمان", "ترجمات")),
+            "ترجمه" to Alias(emptyList(), listOf("tarjuman", "ترجمان", "ترجمات")),
+            "tarjuman" to Alias(emptyList(), listOf("tarjuman", "ترجمان", "ترجمات")),
+            "ترجمانا" to Alias(emptyList(), listOf("tarjuman", "ترجمان")),
+            "تحميل" to Alias(emptyList(), listOf("tahmel", "تحميل", "downloader", "downloads")),
+            "التحميل" to Alias(emptyList(), listOf("tahmel", "تحميل", "downloader", "downloads")),
+            "تحمل" to Alias(emptyList(), listOf("tahmel", "تحميل", "downloader")),
+            "داونلود" to Alias(emptyList(), listOf("tahmel", "downloader", "تحميل", "downloads")),
+            "downloader" to Alias(emptyList(), listOf("tahmel", "downloader", "تحميل", "downloads")),
+            "tahmel" to Alias(emptyList(), listOf("tahmel", "downloader", "تحميل")),
             "تيك توك" to Alias(listOf("com.zhiliaoapp.musically"), listOf("tiktok", "tik tok")),
             "تيكتوك" to Alias(listOf("com.zhiliaoapp.musically"), listOf("tiktok", "tik tok")),
             "سناب شات" to Alias(listOf("com.snapchat.android"), listOf("snapchat")),

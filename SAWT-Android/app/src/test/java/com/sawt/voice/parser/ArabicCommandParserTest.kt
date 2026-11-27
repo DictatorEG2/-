@@ -48,6 +48,22 @@ class ArabicCommandParserTest {
         assertEquals(Command.OpenApp("واتساب"), cmd("افتح واتساب"))
     }
 
+    @Test fun appNamesInArabicAndEnglishAreParsedAsOpenApp() {
+        assertEquals(Command.OpenApp("chatgpt"), cmd("افتح ChatGPT"))
+        assertEquals(Command.OpenApp("chat gpt"), cmd("افتح Chat GPT"))
+        assertEquals(Command.OpenApp("تحميل"), cmd("افتح تحميل"))
+        assertEquals(Command.OpenApp("الترجمان"), cmd("افتح الترجمان"))
+        assertEquals(Command.OpenApp("ترجمات"), cmd("افتح ترجمات"))
+        assertEquals(Command.OpenApp("tarjuman"), cmd("افتح TARJUMAN"))
+    }
+
+    @Test fun expandedScrollAndCallPhrases() {
+        listOf("اقلب الصفحة", "قلب الصفحة", "اسحب لتحت").forEach { assertEquals(Command.ScrollDown, cmd(it)) }
+        listOf("اسحب لفوق", "اطلع لفوق").forEach { assertEquals(Command.ScrollUp, cmd(it)) }
+        assertEquals(Command.CallContact("علي"), cmd("كلم علي"))
+        assertEquals(Command.CallContact("علي"), cmd("رن على علي"))
+    }
+
     @Test fun settingsAndReading() {
         assertEquals(Command.OpenSettings, cmd("افتح الإعدادات"))
         assertEquals(Command.ReadScreen, cmd("اقرأ الشاشة"))
