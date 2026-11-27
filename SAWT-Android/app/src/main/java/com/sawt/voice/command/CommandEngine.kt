@@ -34,7 +34,8 @@ data class ExecResult(
  */
 class CommandEngine(private val context: Context) {
 
-    private var pendingConfirm: Pair<Command, Long>? = null
+    private data class PendingConfirmation(val command: Command, val createdAt: Long, val spoken: String)
+    private var pendingConfirm: PendingConfirmation? = null
     private var dictationUntil = 0L
     private var lastKey = ""
     private var lastAt = 0L
@@ -86,15 +87,15 @@ class CommandEngine(private val context: Context) {
         val pending = pendingConfirm
         if (pending != null) {
             pendingConfirm = null
-            if (now - pending.second <= AppConfig.CONFIRM_TIMEOUT_MS) {
-                if (command == Command.Confirm) return runCommand(pending.first, chosen, settings)
+            if (now - pending.createdAt <= AppConfig.CONFIRM_TIMEOUT_MS) {
+                if (command == Command.Confirm) return runCommand(pending.command, pending.spoken, settings)
                 if (command == Command.Cancel) return ExecResult(true, "تم إلغاء الأمر")
             }
         }
         if (command == Command.Confirm || command == Command.Cancel) return ignored()
 
         if (command.sensitive) {
-            pendingConfirm = command to now
+            pendingConfirm = PendingConfirmation(command, now, chosen)
             return ExecResult(true, confirmPrompt(command))
         }
         return runCommand(command, chosen, settings)
