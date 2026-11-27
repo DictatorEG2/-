@@ -151,7 +151,7 @@ class AppResolver(private val context: Context) {
             "فيسبك" to Alias(listOf("com.facebook.katana", "com.facebook.lite"), listOf("facebook")),
             "واتساب" to Alias(listOf("com.whatsapp", "com.whatsapp.w4b"), listOf("whatsapp")),
             "واتس اب" to Alias(listOf("com.whatsapp", "com.whatsapp.w4b"), listOf("whatsapp")),
-            "كلاود" to Alias(emptyList(), listOf("cloud", "cloudflare", "google drive", "onedrive")),
+            "كلاود" to Alias(emptyList(), listOf("cloud", "cloudflare")),
             "جوجل درايف" to Alias(listOf("com.google.android.apps.docs"), listOf("google drive", "drive")),
             "درايف" to Alias(listOf("com.google.android.apps.docs"), listOf("google drive", "drive")),
             "واتس" to Alias(listOf("com.whatsapp", "com.whatsapp.w4b"), listOf("whatsapp")),
