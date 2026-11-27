@@ -351,7 +351,6 @@ class CommandEngine(private val context: Context) {
         }
         return 1.0 - prior[b.length].toDouble() / maxOf(a.length, b.length)
     }
-    }
 
     private fun ok(success: Boolean, good: String, bad: String) = ExecResult(success, if (success) good else bad)
 
