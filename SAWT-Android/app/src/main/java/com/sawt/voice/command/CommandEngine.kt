@@ -314,7 +314,6 @@ class CommandEngine(private val context: Context) {
                     val saved = normalizeContact(savedName)
                     val score = when {
                         saved == query -> 1.0
-                        saved == query -> 1.0
                         else -> contactSimilarity(transliterateContact(query), transliterateContact(saved))
                     }
                     if (score > bestScore) {
