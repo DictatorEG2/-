@@ -103,6 +103,7 @@ class CommandEngine(private val context: Context) {
 
     private fun confirmPrompt(c: Command): String = when (c) {
         is Command.Call -> "هل تريد الاتصال بالرقم ${c.number}؟ قل نعم للتأكيد أو إلغاء"
+        is Command.CallContact -> "هل تريد الاتصال بجهة الاتصال ${c.name}؟ قل نعم للتأكيد أو إلغاء"
         else -> "هل تريد تنفيذ ${c.label}؟ قل نعم أو إلغاء"
     }
 
@@ -194,6 +195,36 @@ class CommandEngine(private val context: Context) {
             val opened = launch(viaApp) || launch(Intent(Intent.ACTION_VIEW, uri))
             ok(opened, "تم فتح المحادثة", "تعذر فتح واتساب")
         }
+        is Command.CallContact -> {
+            val number = findContactNumber(c.name)
+            if (number == null) {
+                val hasPermission = context.checkSelfPermission(android.Manifest.permission.READ_CONTACTS) ==
+                    android.content.pm.PackageManager.PERMISSION_GRANTED
+                ExecResult(false, if (hasPermission) "لم أجد ${c.name} في جهات الاتصال" else "اسمح لصَوْت بالوصول إلى جهات الاتصال من شاشة الأذونات أولًا")
+            } else ok(
+                launch(Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", number, null))),
+                "تم فتح رقم ${c.name}. اضغط زر الاتصال لإتمام المكالمة",
+                "تعذر فتح تطبيق الهاتف",
+            )
+        }
+        is Command.WhatsAppContact -> {
+            val number = findContactNumber(c.name)
+            if (number == null) {
+                val hasPermission = context.checkSelfPermission(android.Manifest.permission.READ_CONTACTS) ==
+                    android.content.pm.PackageManager.PERMISSION_GRANTED
+                ExecResult(false, if (hasPermission) "لم أجد ${c.name} في جهات الاتصال" else "اسمح لصَوْت بالوصول إلى جهات الاتصال من شاشة الأذونات أولًا")
+            } else {
+                val digits = number.filter { it.isDigit() }
+                val international = when {
+                    digits.startsWith("00") -> digits.drop(2)
+                    digits.startsWith("01") && digits.length == 11 -> "20" + digits.drop(1)
+                    else -> digits
+                }
+                val uri = Uri.parse("https://wa.me/$international")
+                val viaApp = Intent(Intent.ACTION_VIEW, uri).setPackage("com.whatsapp")
+                ok(launch(viaApp) || launch(Intent(Intent.ACTION_VIEW, uri)), "فتحت محادثة ${c.name}. قل الرسالة التي تريد كتابتها، ولن تُرسل دون ضغطك على إرسال", "تعذر فتح واتساب")
+            }
+        }
         is Command.Call -> ok(
             launch(Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", c.number, null))),
             "تم فتح شاشة الاتصال. اضغط زر الاتصال لإتمام المكالمة",
@@ -202,6 +233,20 @@ class CommandEngine(private val context: Context) {
         Command.StopListening -> ExecResult(true, "تم إيقاف الاستماع", stopListening = true)
         Command.Unknown -> ExecResult(false, "لم أفهم الأمر")
         Command.Confirm, Command.Cancel -> ExecResult(false, "لا يوجد أمر بانتظار التأكيد", ignored = true)
+    }
+
+    private fun findContactNumber(name: String): String? {
+        if (context.checkSelfPermission(android.Manifest.permission.READ_CONTACTS) !=
+            android.content.pm.PackageManager.PERMISSION_GRANTED
+        ) return null
+        val uri = android.provider.ContactsContract.CommonDataKinds.Phone.CONTENT_FILTER_URI
+            .buildUpon().appendPath(name).build()
+        val projection = arrayOf(android.provider.ContactsContract.CommonDataKinds.Phone.NUMBER)
+        return runCatching {
+            context.contentResolver.query(uri, projection, null, null, null)?.use { cursor ->
+                if (cursor.moveToFirst()) cursor.getString(0) else null
+            }
+        }.getOrNull()
     }
 
     private fun ok(success: Boolean, good: String, bad: String) = ExecResult(success, if (success) good else bad)
