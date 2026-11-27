@@ -251,19 +251,21 @@ fun PermissionsScreen(back: () -> Unit) {
     val context = LocalContext.current
     val tick = rememberResumeTick()
     var refresh by remember { mutableIntStateOf(0) }
+    val contacts = remember(tick, refresh) { Permissions.hasContacts(context) }
     val mic = remember(tick, refresh) { Permissions.hasMic(context) }
     val notif = remember(tick, refresh) { Permissions.hasNotifications(context) }
     val a11y = remember(tick, refresh) { Permissions.isAccessibilityEnabled(context) }
     val write = remember(tick, refresh) { Permissions.canWriteSettings(context) }
     var showDisclosure by remember { mutableStateOf(false) }
 
+    val contactsLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { refresh++ }
     val micLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { refresh++ }
     val notifLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { refresh++ }
 
     SawtScaffold("الأذونات", back) { pad ->
         ScreenColumn(pad) {
             Text(
-                "صَوْت يطلب أقل عدد ممكن من الأذونات. يستخدم الإنترنت فقط لفحص تحديثات GitHub وتنزيلها، ولا يطلب جهات الاتصال أو صلاحية الوصول إلى الملفات العامة.",
+                "صَوْت يطلب الأذونات عند الحاجة فقط. إذن جهات الاتصال اختياري ولا يُستخدم إلا عند طلب الاتصال بشخص بالاسم أو فتح محادثة واتساب معه.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -274,6 +276,13 @@ fun PermissionsScreen(back: () -> Unit) {
                 granted = mic,
                 actionLabel = "السماح بالميكروفون",
             ) { micLauncher.launch(Manifest.permission.RECORD_AUDIO) }
+
+            PermissionCard(
+                title = "جهات الاتصال (اختياري)",
+                reason = "للتعرّف على أسماء مثل «اتصل بعلي» أو «افتح محادثة واتساب مع علي» وتحويلها إلى رقم. لا تُرسل جهات الاتصال إلى أي خادم.",
+                granted = contacts,
+                actionLabel = "السماح بجهات الاتصال",
+            ) { contactsLauncher.launch(Manifest.permission.READ_CONTACTS) }
 
             PermissionCard(
                 title = "خدمة إمكانية الوصول",
