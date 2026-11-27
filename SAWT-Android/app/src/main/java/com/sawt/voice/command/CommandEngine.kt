@@ -322,7 +322,7 @@ class CommandEngine(private val context: Context) {
                         bestNumber = number
                     }
                 }
-                bestNumber?.takeIf { bestScore >= 0.72 }
+                bestNumber?.takeIf { bestScore >= 0.78 }
             }
         }.getOrNull()
     }
@@ -334,7 +334,7 @@ class CommandEngine(private val context: Context) {
         val map = mapOf('ا' to "a", 'أ' to "a", 'إ' to "a", 'آ' to "a", 'ب' to "b", 'ت' to "t",
             'ج' to "g", 'ح' to "h", 'خ' to "kh", 'د' to "d", 'ر' to "r", 'ز' to "z", 'س' to "s",
             'ش' to "sh", 'ع' to "a", 'غ' to "gh", 'ف' to "f", 'ق' to "q", 'ك' to "k", 'ل' to "l",
-            'م' to "m", 'ن' to "n", 'ه' to "h", 'و' to "w", 'ي' to "y", 'ى' to "a")
+            'م' to "m", 'ن' to "n", 'ه' to "h", 'و' to "w", 'ي' to "i", 'ى' to "i")
         return value.map { map[it] ?: it.toString() }.joinToString("")
     }
 
