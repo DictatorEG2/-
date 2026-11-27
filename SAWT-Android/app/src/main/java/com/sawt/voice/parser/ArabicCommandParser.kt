@@ -95,7 +95,7 @@ class ArabicCommandParser {
                 i != appIndex && w.norm !in setOf("افتح", "افتحلي", "شغل", "شغلي", "رساله", "رسالة", "ابعت", "ابعث", "ارسل", "رسائل")
             }
         }
-        val name = nameWords.joinToString(" ") { it.orig }.trim()
+        val name = nameWords.joinToString(" ") { it.orig.removePrefix("ب").removePrefix("ل") }.trim()
         return name.takeIf { it.length >= 2 }?.let { Command.WhatsAppContact(it) }
     }
 
