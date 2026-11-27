@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">صَوْت | SAWT</string>
+    <string name="accessibility_service_description">تتيح لصَوْت تنفيذ أوامرك الصوتية على الشاشة: الضغط على العناصر والتمرير والرجوع والكتابة وقراءة النص الظاهر. لا يقرأ التطبيق الشاشة ولا يتحكم بها إلا عندما تطلب ذلك صوتيًا أو من الزر العائم، ولا يخزّن محتوى الشاشة.</string>
+    <string name="notification_channel_name">حالة الاستماع</string>
+    <string name="notification_title">صَوْت يستمع الآن</string>
+    <string name="notification_text">الميكروفون قيد الاستخدام. اضغط «إيقاف» لإنهاء الاستماع فورًا.</string>
+    <string name="notification_stop">إيقاف</string>
+    <string name="floating_button_description">زر صَوْت للتحكم بالاستماع</string>
+</resources>
