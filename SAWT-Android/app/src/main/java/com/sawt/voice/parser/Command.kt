@@ -23,6 +23,7 @@ sealed interface Command {
     data object OpenSettings : Command { override val label = "فتح الإعدادات" }
     data object OpenMessages : Command { override val label = "فتح الرسائل" }
     data object TakeScreenshot : Command { override val label = "لقطة شاشة" }
+    data object TakePhoto : Command { override val label = "التقاط صورة" }
     data object StartDictation : Command { override val label = "بدء الكتابة الصوتية" }
     data object YoutubeHome : Command { override val label = "فتح يوتيوب" }
     data object StopListening : Command { override val label = "إيقاف الاستماع" }

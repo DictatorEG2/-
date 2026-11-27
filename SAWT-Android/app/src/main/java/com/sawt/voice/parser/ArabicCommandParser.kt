@@ -39,6 +39,7 @@ class ArabicCommandParser {
 
     private fun parseWords(t: List<W>): Command {
         parseDictation(t)?.let { return it }
+        parsePhoto(t)?.let { return it }
         parseYoutube(t)?.let { return it }
         parseTelegram(t)?.let { return it }
         parseWebSearch(t)?.let { return it }
@@ -49,6 +50,13 @@ class ArabicCommandParser {
         matchSimple(t.map { it.norm })?.let { return it }
         parseOpenApp(t)?.let { return it }
         return Command.Unknown
+    }
+
+    private fun parsePhoto(t: List<W>): Command? {
+        val words = t.map { it.norm }.toSet()
+        val capture = setOf("صور", "صورلي", "التقط", "التقاط", "خد", "خدلي", "التقطلي", "capture", "photo", "picture", "shutter")
+        val cameraContext = words.any { it in setOf("كاميرا", "الكاميرا", "صوره", "تصوير") }
+        return if (words.any { it in capture } && (cameraContext || words.size <= 2)) Command.TakePhoto else null
     }
 
     private fun parseDictation(t: List<W>): Command? {

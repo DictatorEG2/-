@@ -64,6 +64,12 @@ class ArabicCommandParserTest {
         assertEquals(Command.CallContact("علي"), cmd("رن على علي"))
     }
 
+    @Test fun photoCaptureCommands() {
+        listOf("التقط", "صور", "خد صورة", "التقط صورة", "صور الكاميرا").forEach {
+            assertEquals(Command.TakePhoto, cmd(it))
+        }
+    }
+
     @Test fun settingsAndReading() {
         assertEquals(Command.OpenSettings, cmd("افتح الإعدادات"))
         assertEquals(Command.ReadScreen, cmd("اقرأ الشاشة"))
