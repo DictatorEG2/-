@@ -171,6 +171,14 @@ class CommandEngine(private val context: Context) {
         Command.TakeScreenshot ->
             if (Build.VERSION.SDK_INT < 28) ExecResult(false, "لقطة الشاشة تتطلب Android 9 أو أحدث")
             else global(AccessibilityService.GLOBAL_ACTION_TAKE_SCREENSHOT, "تم التقاط لقطة الشاشة")
+        Command.TakePhoto -> {
+            val captured = SawtAccessibilityService.instance?.clickText("shutter") == true
+            if (captured) ExecResult(true, "تم التقاط الصورة")
+            else {
+                val cameraIntent = Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE)
+                ok(launch(cameraIntent), "فتحت الكاميرا. قل «التقط» لالتقاط الصورة", "لم أجد تطبيق كاميرا")
+            }
+        }
         is Command.OpenApp -> {
             val intent = AppGraph.resolver.resolve(c.name)
             if (intent != null && launch(intent)) ExecResult(true, "تم فتح ${c.name}")
@@ -231,8 +239,11 @@ class CommandEngine(private val context: Context) {
                     android.content.pm.PackageManager.PERMISSION_GRANTED
                 ExecResult(false, if (hasPermission) "لم أجد ${c.name} في جهات الاتصال" else "اسمح لصَوْت بالوصول إلى جهات الاتصال من شاشة الأذونات أولًا")
             } else ok(
-                launch(Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", number, null))),
-                "تم فتح رقم ${c.name}. اضغط زر الاتصال لإتمام المكالمة",
+                if (context.checkSelfPermission(android.Manifest.permission.CALL_PHONE) == android.content.pm.PackageManager.PERMISSION_GRANTED)
+                    launch(Intent(Intent.ACTION_CALL, Uri.fromParts("tel", number, null)))
+                else launch(Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", number, null))),
+                if (context.checkSelfPermission(android.Manifest.permission.CALL_PHONE) == android.content.pm.PackageManager.PERMISSION_GRANTED)
+                    "جارٍ الاتصال بـ ${c.name}" else "تم فتح رقم ${c.name}. امنح إذن الاتصال المباشر لتتم المكالمة صوتيًا دون ضغط إضافي",
                 "تعذر فتح تطبيق الهاتف",
             )
         }
@@ -255,8 +266,11 @@ class CommandEngine(private val context: Context) {
             }
         }
         is Command.Call -> ok(
-            launch(Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", c.number, null))),
-            "تم فتح شاشة الاتصال. اضغط زر الاتصال لإتمام المكالمة",
+            if (context.checkSelfPermission(android.Manifest.permission.CALL_PHONE) == android.content.pm.PackageManager.PERMISSION_GRANTED)
+                launch(Intent(Intent.ACTION_CALL, Uri.fromParts("tel", c.number, null)))
+            else launch(Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", c.number, null))),
+            if (context.checkSelfPermission(android.Manifest.permission.CALL_PHONE) == android.content.pm.PackageManager.PERMISSION_GRANTED)
+                "جارٍ الاتصال" else "تم فتح شاشة الاتصال. امنح إذن الاتصال المباشر لإتمام المكالمة صوتيًا",
             "تعذر فتح تطبيق الهاتف",
         )
         Command.StopListening -> ExecResult(true, "تم إيقاف الاستماع", stopListening = true)
