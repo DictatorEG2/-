@@ -150,6 +150,7 @@ class SawtAccessibilityService : AccessibilityService() {
         val root = rootInActiveWindow ?: return false
         val candidates = when (text.lowercase()) {
             "like" -> listOf("Like", "إعجاب", "أعجبني", "اعجاب", "أحب")
+            "shutter" -> listOf("Shutter", "Take photo", "Take picture", "Capture", "التقاط صورة", "التقط صورة", "التقاط", "تصوير", "زر التصوير")
             else -> listOf(text)
         }
         val target = candidates.asSequence()
