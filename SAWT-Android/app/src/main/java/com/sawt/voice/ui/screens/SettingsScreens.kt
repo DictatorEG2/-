@@ -68,6 +68,7 @@ fun VoiceSettingsScreen(back: () -> Unit) {
     var availableRelease by remember { mutableStateOf<GithubUpdateClient.Release?>(cachedRelease) }
     var checkingUpdate by remember { mutableStateOf(false) }
     var downloadingUpdate by remember { mutableStateOf(false) }
+    var autoDownloadedTag by remember { mutableStateOf(context.getSharedPreferences("sawt_update_state", android.content.Context.MODE_PRIVATE).getString("auto_download_tag", null)) }
 
     val checkForUpdates: () -> Unit = {
         if (!checkingUpdate) {
@@ -80,6 +81,21 @@ fun VoiceSettingsScreen(back: () -> Unit) {
                         availableRelease = result.release
                         UpdateStartupCheck.cacheRelease(context, result.release)
                         updateStatus = "يتوفر إصدار ${result.release.tag}: ${result.release.name}"
+                        val updatePrefs = context.getSharedPreferences("sawt_update_state", android.content.Context.MODE_PRIVATE)
+                        if (autoDownloadedTag != result.release.tag) {
+                            downloadingUpdate = true
+                            scope.launch {
+                                val download = withContext(Dispatchers.IO) { runCatching { GithubUpdateClient.download(context, result.release) } }
+                                if (download.isSuccess) {
+                                    updatePrefs.edit().putString("auto_download_tag", result.release.tag).apply()
+                                    autoDownloadedTag = result.release.tag
+                                    updateStatus = "بدأ تنزيل التحديث تلقائيًا. عند اكتماله سيظهر إشعار لفتح مثبت Android والموافقة على التثبيت."
+                                } else {
+                                    updateStatus = "تعذر تنزيل التحديث تلقائيًا. يمكنك المحاولة من زر التنزيل."
+                                }
+                                downloadingUpdate = false
+                            }
+                        }
                     }
                     GithubUpdateClient.CheckResult.UpToDate -> {
                         availableRelease = null
@@ -185,8 +201,8 @@ fun VoiceSettingsScreen(back: () -> Unit) {
                         Text(release.notes, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     PrimaryButton(
-                        text = if (downloadingUpdate) "جارٍ بدء التنزيل…" else "تنزيل التحديث ${release.tag}",
-                        enabled = !downloadingUpdate,
+                        text = when { downloadingUpdate -> "جارٍ التنزيل…"; autoDownloadedTag == release.tag -> "تم بدء تنزيل هذا التحديث"; else -> "تنزيل التحديث ${release.tag}" },
+                        enabled = !downloadingUpdate && autoDownloadedTag != release.tag,
                         modifier = Modifier.fillMaxWidth(),
                         onClick = {
                             if (!downloadingUpdate) {
